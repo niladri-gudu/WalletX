@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UseropModule } from './userop/userop.module';
+import { AppController } from './app.controller.js';
+import { AppService } from './app.service.js';
+import { UseropModule } from './userop/userop.module.js';
 
 @Module({
   imports: [UseropModule],

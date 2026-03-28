@@ -33,7 +33,18 @@ export function buildUserOp(
   return {
     sender,
     nonce,
+    initCode: '0x',
     callData,
+
+    callGasLimit: 300000n,
+    verificationGasLimit: 300000n,
+    preVerificationGas: 100000n,
+
+    maxFeePerGas: 20000000000n,
+    maxPriorityFeePerGas: 1000000000n,
+
+    paymasterAndData: '0x',
+
     signature: '0x',
   };
 }

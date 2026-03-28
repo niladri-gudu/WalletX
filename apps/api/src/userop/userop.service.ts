@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { publicClient } from '../blockchain/viem.client';
-import { buildCallData, buildUserOp } from './userop.builder';
-import { getUserOpHash, signUserOp } from './userop.signer';
-import { sendUserOp } from './userop.sender';
+import { publicClient } from '../blockchain/viem.client.js';
+import { buildCallData, buildUserOp } from './userop.builder.js';
+import { getUserOpHash, signUserOp } from './userop.signer.js';
+import { sendUserOp } from './userop.sender.js';
 
 @Injectable()
 export class UseropService {

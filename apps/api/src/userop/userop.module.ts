@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { UseropService } from './userop.service';
-import { UseropController } from './userop.controller';
+import { UseropService } from './userop.service.js';
+import { UseropController } from './userop.controller.js';
 
 @Module({
   providers: [UseropService],
-  controllers: [UseropController]
+  controllers: [UseropController],
 })
 export class UseropModule {}

@@ -52,18 +52,26 @@ contract SmartWallet {
     function validateUserOp(
         UserOperation calldata userOp,
         bytes32 userOpHash,
-        uint256 /* missingAccountFunds */
+        uint256 missingAccountFunds
     ) external onlyEntryPoint returns (uint256 validationData) {
-        require(userOp.nonce == nonce, "Invalid nonce");
+        require(msg.sender == entryPoint, "Not EntryPoint");
+
         require(userOp.sender == address(this), "Invalid sender");
+        require(userOp.nonce == nonce, "Invalid nonce");
 
         address recovered = recoverSigner(userOpHash, userOp.signature);
-        require(recovered != address(0), "Invalid signer");
         require(recovered == owner, "Invalid signature");
 
         nonce++;
 
-        return 0; // success
+        if (missingAccountFunds > 0) {
+            (bool success, ) = payable(msg.sender).call{
+                value: missingAccountFunds
+            }("");
+            require(success, "Prefund failed");
+        }
+
+        return 0;
     }
 
     // =========================
@@ -73,13 +81,8 @@ contract SmartWallet {
         bytes32 hash,
         bytes memory signature
     ) internal pure returns (address) {
-        bytes32 ethSignedHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-        );
-
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(signature);
-
-        return ecrecover(ethSignedHash, v, r, s);
+        return ecrecover(hash, v, r, s);
     }
 
     function splitSignature(

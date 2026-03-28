@@ -1,14 +1,18 @@
-import { keccak256, encodeAbiParameters, hexToBytes } from 'viem';
-import { walletClient } from '../blockchain/viem.client';
-import { UserOperation } from './userop.types';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { walletClient } from '../blockchain/viem.client.js';
+import { getUserOperationHash } from 'viem/account-abstraction';
+import { hexToBytes } from 'viem';
 
-export function getUserOpHash(userOp: UserOperation) {
-  const encoded = encodeAbiParameters(
-    [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
-    [userOp.sender, userOp.nonce, userOp.callData],
-  );
+const ENTRY_POINT = process.env.ENTRY_POINT as `0x${string}`;
+const CHAIN_ID = 11155111;
 
-  return keccak256(encoded);
+export function getUserOpHash(userOp: any) {
+  return getUserOperationHash({
+    userOperation: userOp,
+    entryPointAddress: ENTRY_POINT,
+    chainId: CHAIN_ID,
+    entryPointVersion: '0.9',
+  });
 }
 
 export async function signUserOp(hash: `0x${string}`) {
