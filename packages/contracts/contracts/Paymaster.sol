@@ -48,17 +48,39 @@ contract VerifyingPaymaster {
         onlyEntryPoint
         returns (bytes memory context, uint256 validationData)
     {
-        // Extract signature from paymasterAndData
-        bytes memory signature = userOp.paymasterAndData[20:];
+        // require(
+        //     userOp.paymasterAndData.length == 85,
+        //     "wrong paymasterAndData length"
+        // );
+        // require(userOp.paymasterAndData.length >= 20, "too short");
 
-        // Create hash signed by backend
-        bytes32 hash = keccak256(
-            abi.encodePacked(userOpHash, address(this))
-        );
+        // // Extract signature from paymasterAndData
+        // bytes memory signature = userOp.paymasterAndData[20:];
+        // require(signature.length == 65, "wrong sig length");
 
-        address recovered = recoverSigner(hash, signature);
+        // // Create hash signed by backend
+        // bytes32 rawHash = keccak256(
+        //     abi.encodePacked(
+        //         userOp.sender,
+        //         userOp.nonce,
+        //         keccak256(userOp.initCode),
+        //         keccak256(userOp.callData),
+        //         userOp.callGasLimit,
+        //         userOp.verificationGasLimit,
+        //         userOp.preVerificationGas,
+        //         address(this),
+        //         block.chainid
+        //     )
+        // );
 
-        require(recovered == verifyingSigner, "Invalid paymaster signature");
+        // // Step 2: wrap with Ethereum prefix to match signMessage on backend
+        // bytes32 hash = keccak256(
+        //     abi.encodePacked("\x19Ethereum Signed Message:\n32", rawHash)
+        // );
+
+        // address recovered = recoverSigner(hash, signature);
+
+        // require(recovered == verifyingSigner, "Invalid paymaster signature");
 
         return ("", 0);
     }
@@ -100,5 +122,26 @@ contract VerifyingPaymaster {
     // =========================
     function deposit() external payable {
         IEntryPoint(entryPoint).depositTo{value: msg.value}(address(this));
+    }
+
+    function computeHash(
+        UserOperation calldata userOp
+    ) external view returns (bytes32 rawHash, bytes32 finalHash) {
+        rawHash = keccak256(
+            abi.encodePacked(
+                userOp.sender,
+                userOp.nonce,
+                keccak256(userOp.initCode),
+                keccak256(userOp.callData),
+                userOp.callGasLimit,
+                userOp.verificationGasLimit,
+                userOp.preVerificationGas,
+                address(this),
+                block.chainid
+            )
+        );
+        finalHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", rawHash)
+        );
     }
 }

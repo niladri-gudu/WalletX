@@ -3,6 +3,7 @@ import { publicClient } from '../blockchain/viem.client.js';
 import { buildCallData, buildUserOp } from './userop.builder.js';
 import { getUserOpHash, signUserOp } from './userop.signer.js';
 import { sendUserOp } from './userop.sender.js';
+import { getPaymasterDataFromHash } from '../lib/paymaster.js';
 
 @Injectable()
 export class UseropService {
@@ -25,11 +26,10 @@ export class UseropService {
 
     const userOp = buildUserOp(wallet, nonce, calldata);
 
-    const hash = getUserOpHash(userOp);
+    userOp.paymasterAndData = await getPaymasterDataFromHash(userOp);
 
-    const signature = await signUserOp(hash);
-
-    userOp.signature = signature;
+    const finalHash = getUserOpHash(userOp);
+    userOp.signature = await signUserOp(finalHash);
 
     return await sendUserOp(userOp);
   }

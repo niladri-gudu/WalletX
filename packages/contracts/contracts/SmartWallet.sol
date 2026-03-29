@@ -60,13 +60,15 @@ contract SmartWallet {
         UserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
-    ) external onlyEntryPoint returns (uint256 validationData) {
-        require(msg.sender == entryPoint, "Not EntryPoint");
-
+    ) external onlyEntryPoint returns (uint256) {
         require(userOp.sender == address(this), "Invalid sender");
         require(userOp.nonce == nonce, "Invalid nonce");
 
-        address recovered = recoverSigner(userOpHash, userOp.signature);
+        bytes32 hash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", userOpHash)
+        );
+
+        address recovered = recoverSigner(hash, userOp.signature);
         require(recovered == owner, "Invalid signature");
 
         nonce++;
