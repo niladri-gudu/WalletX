@@ -36,9 +36,9 @@ export function buildUserOp(
     initCode: '0x',
     callData,
 
-    callGasLimit: 300000n,
-    verificationGasLimit: 300000n,
-    preVerificationGas: 100000n,
+    callGasLimit: 150000n,
+    verificationGasLimit: 200000n,
+    preVerificationGas: 60000n,
 
     maxFeePerGas: 20000000000n,
     maxPriorityFeePerGas: 1000000000n,

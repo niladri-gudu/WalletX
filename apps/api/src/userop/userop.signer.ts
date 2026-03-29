@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { walletClient } from '../blockchain/viem.client.js';
 import { getUserOperationHash } from 'viem/account-abstraction';
-import { hexToBytes } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
 const ENTRY_POINT = process.env.ENTRY_POINT as `0x${string}`;
 const CHAIN_ID = 11155111;
@@ -11,12 +12,12 @@ export function getUserOpHash(userOp: any) {
     userOperation: userOp,
     entryPointAddress: ENTRY_POINT,
     chainId: CHAIN_ID,
-    entryPointVersion: '0.9',
+    entryPointVersion: '0.6',
   });
 }
 
 export async function signUserOp(hash: `0x${string}`) {
-  return await walletClient.signMessage({
-    message: { raw: hexToBytes(hash) },
+  return await account.sign({
+    hash,
   });
 }
