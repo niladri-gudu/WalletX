@@ -1,3 +1,4 @@
 {
-  "SmartWalletModule#SmartWallet": "0x1891598D7cC6aD256e2BdF22BA47cdeb12125b4c"
+  "SmartWalletModule#SmartWallet": "0x1891598D7cC6aD256e2BdF22BA47cdeb12125b4c",
+  "VerifyingPaymasterModule#VerifyingPaymaster": "0xfBe0afA42889e844B8aF9fA8E2ACBcCD328404A4"
 }
