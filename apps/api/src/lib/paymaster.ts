@@ -1,40 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { keccak256, encodePacked } from 'viem';
-import { paymasterSigner } from './paymasterSigner.js';
-import { PAYMASTER_ADDRESS, CHAIN_ID } from '../config/constants.js';
+import { privateKeyToAccount } from 'viem/accounts';
 
-export async function getPaymasterDataFromHash(userOp: any) {
-  const rawHash = keccak256(
-    encodePacked(
-      [
-        'address',
-        'uint256',
-        'bytes32',
-        'bytes32',
-        'uint256',
-        'uint256',
-        'uint256',
-        'address',
-        'uint256',
-      ] as const,
-      [
-        userOp.sender as `0x${string}`,
-        userOp.nonce as bigint,
-        keccak256(userOp.initCode as `0x${string}`),
-        keccak256(userOp.callData as `0x${string}`),
-        userOp.callGasLimit as bigint,
-        userOp.verificationGasLimit as bigint,
-        userOp.preVerificationGas as bigint,
-        PAYMASTER_ADDRESS,
-        BigInt(CHAIN_ID),
-      ],
-    ),
-  );
+const PRIVATE_KEY = process.env.PAYMASTER_PRIVATE_KEY as `0x${string}`;
 
-  const signature = await paymasterSigner.signMessage({
-    message: { raw: rawHash },
+export async function getPaymasterData(
+  userOpHash: `0x${string}`,
+): Promise<`0x${string}`> {
+  const account = privateKeyToAccount(PRIVATE_KEY);
+
+  const signature = await account.signMessage({
+    message: { raw: userOpHash },
   });
 
-  return (PAYMASTER_ADDRESS + signature.slice(2)) as `0x${string}`;
+  return signature;
 }

@@ -2,7 +2,9 @@ export type UserOperation = {
   sender: `0x${string}`;
   nonce: bigint;
 
-  initCode: `0x${string}`;
+  factory: `0x${string}` | null;
+  factoryData: `0x${string}` | null;
+
   callData: `0x${string}`;
 
   callGasLimit: bigint;
@@ -12,7 +14,11 @@ export type UserOperation = {
   maxFeePerGas: bigint;
   maxPriorityFeePerGas: bigint;
 
-  paymasterAndData: `0x${string}`;
+  // ✅ FIX HERE
+  paymaster: `0x${string}` | null;
+  paymasterVerificationGasLimit: bigint;
+  paymasterPostOpGasLimit: bigint;
+  paymasterData: `0x${string}` | null;
 
   signature: `0x${string}`;
 };

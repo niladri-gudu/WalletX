@@ -23,16 +23,14 @@ contract SmartWallet {
     // =========================
     // ERC-4337 UserOperation Struct (Minimal)
     // =========================
-    struct UserOperation {
+    struct PackedUserOperation {
         address sender;
         uint256 nonce;
         bytes initCode;
         bytes callData;
-        uint256 callGasLimit;
-        uint256 verificationGasLimit;
+        bytes32 accountGasLimits;
         uint256 preVerificationGas;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
+        bytes32 gasFees;
         bytes paymasterAndData;
         bytes signature;
     }
@@ -57,7 +55,7 @@ contract SmartWallet {
     // ERC-4337 Validation Function
     // =========================
     function validateUserOp(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external onlyEntryPoint returns (uint256) {

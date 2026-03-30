@@ -19,84 +19,78 @@ contract VerifyingPaymaster {
         _;
     }
 
-    // =========================
-    // ERC-4337 UserOperation
-    // =========================
     struct UserOperation {
         address sender;
         uint256 nonce;
         bytes initCode;
         bytes callData;
-        uint256 callGasLimit;
-        uint256 verificationGasLimit;
+        bytes32 accountGasLimits;
         uint256 preVerificationGas;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
+        bytes32 gasFees;
         bytes paymasterAndData;
         bytes signature;
     }
 
-    // =========================
-    // Validate Paymaster
-    // =========================
     function validatePaymasterUserOp(
         UserOperation calldata userOp,
         bytes32 userOpHash,
-        uint256 /* maxCost */
+        uint256
     )
         external
         onlyEntryPoint
         returns (bytes memory context, uint256 validationData)
     {
-        // require(
-        //     userOp.paymasterAndData.length == 85,
-        //     "wrong paymasterAndData length"
-        // );
-        // require(userOp.paymasterAndData.length >= 20, "too short");
+        bytes memory sig = new bytes(65);
+        uint256 start = userOp.paymasterAndData.length - 65;
+        for (uint256 i = 0; i < 65; i++) {
+            sig[i] = userOp.paymasterAndData[start + i];
+        }
 
-        // // Extract signature from paymasterAndData
-        // bytes memory signature = userOp.paymasterAndData[20:];
-        // require(signature.length == 65, "wrong sig length");
+        bytes memory paymasterAndDataWithoutSig = new bytes(start);
+        for (uint256 i = 0; i < start; i++) {
+            paymasterAndDataWithoutSig[i] = userOp.paymasterAndData[i];
+        }
 
-        // // Create hash signed by backend
-        // bytes32 rawHash = keccak256(
-        //     abi.encodePacked(
-        //         userOp.sender,
-        //         userOp.nonce,
-        //         keccak256(userOp.initCode),
-        //         keccak256(userOp.callData),
-        //         userOp.callGasLimit,
-        //         userOp.verificationGasLimit,
-        //         userOp.preVerificationGas,
-        //         address(this),
-        //         block.chainid
-        //     )
-        // );
+        // Rebuild userOp hash with empty paymasterData sig — matches what JS signed
+        bytes32 reconstructedHash = keccak256(
+            abi.encodePacked(
+                keccak256(
+                    abi.encode(
+                        userOp.sender,
+                        userOp.nonce,
+                        keccak256(userOp.initCode),
+                        keccak256(userOp.callData),
+                        userOp.accountGasLimits,
+                        userOp.preVerificationGas,
+                        userOp.gasFees,
+                        keccak256(paymasterAndDataWithoutSig) // ← without sig
+                    )
+                ),
+                entryPoint,
+                block.chainid
+            )
+        );
 
-        // // Step 2: wrap with Ethereum prefix to match signMessage on backend
-        // bytes32 hash = keccak256(
-        //     abi.encodePacked("\x19Ethereum Signed Message:\n32", rawHash)
-        // );
+        bytes32 ethHash = keccak256(
+            abi.encodePacked(
+                "\x19Ethereum Signed Message:\n32",
+                reconstructedHash
+            )
+        );
 
-        // address recovered = recoverSigner(hash, signature);
-
-        // require(recovered == verifyingSigner, "Invalid paymaster signature");
+        address recovered = recoverSigner(ethHash, sig);
+        require(recovered == verifyingSigner, "Invalid paymaster signature");
 
         return ("", 0);
     }
 
-    // =========================
-    // Post Operation (optional)
-    // =========================
     function postOp(
-        uint8 /* mode */,
-        bytes calldata /* context */,
-        uint256 /* actualGasCost */
+        uint8,
+        bytes calldata,
+        uint256,
+        uint256
     ) external onlyEntryPoint {}
 
-    // =========================
-    // Signature Recovery
-    // =========================
     function recoverSigner(
         bytes32 hash,
         bytes memory signature
@@ -117,31 +111,7 @@ contract VerifyingPaymaster {
         }
     }
 
-    // =========================
-    // Deposit Helper
-    // =========================
     function deposit() external payable {
         IEntryPoint(entryPoint).depositTo{value: msg.value}(address(this));
-    }
-
-    function computeHash(
-        UserOperation calldata userOp
-    ) external view returns (bytes32 rawHash, bytes32 finalHash) {
-        rawHash = keccak256(
-            abi.encodePacked(
-                userOp.sender,
-                userOp.nonce,
-                keccak256(userOp.initCode),
-                keccak256(userOp.callData),
-                userOp.callGasLimit,
-                userOp.verificationGasLimit,
-                userOp.preVerificationGas,
-                address(this),
-                block.chainid
-            )
-        );
-        finalHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", rawHash)
-        );
     }
 }
