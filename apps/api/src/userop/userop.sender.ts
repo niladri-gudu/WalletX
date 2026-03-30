@@ -31,7 +31,6 @@ function serializeUserOp(userOp: any) {
     op.paymasterData = userOp.paymasterData ?? '0x';
   }
 
-  console.log('📤 serialized userOp:', JSON.stringify(op, null, 2));
   return op;
 }
 
@@ -50,6 +49,5 @@ export async function sendUserOp(userOp: any) {
     }),
   });
   const result = await res.json();
-  console.log('📥 bundler response:', JSON.stringify(result, null, 2));
   return result;
 }

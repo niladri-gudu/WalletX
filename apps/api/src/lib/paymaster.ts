@@ -6,10 +6,5 @@ export async function getPaymasterData(
   userOpHash: `0x${string}`,
 ): Promise<`0x${string}`> {
   const account = privateKeyToAccount(PRIVATE_KEY);
-
-  const signature = await account.signMessage({
-    message: { raw: userOpHash },
-  });
-
-  return signature;
+  return await account.sign({ hash: userOpHash });
 }
