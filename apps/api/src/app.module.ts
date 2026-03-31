@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { UseropModule } from './userop/userop.module.js';
+import { SessionModule } from './session/session.module.js';
 
 @Module({
-  imports: [UseropModule],
+  imports: [UseropModule, SessionModule],
   controllers: [AppController],
   providers: [AppService],
 })
