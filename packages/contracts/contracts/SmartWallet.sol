@@ -6,7 +6,18 @@ contract SmartWallet {
     address public entryPoint;
     uint256 public nonce;
 
+    struct SessionKey {
+        address allowedTarget;  // which address it can call
+        uint256 maxAmount;      // max ETH per tx
+        uint256 validUntil;     // expiry timestamp
+        bool active;
+    }
+
+    mapping(address => SessionKey) public sessionKeys;
+
     event Executed(address to, uint256 value);
+    event SessionKeyAdded(address key, address target, uint256 maxAmount, uint256 validUntil);
+    event SessionKeyRevoked(address key);
 
     constructor(address _owner, address _entryPoint) {
         owner = _owner;
@@ -18,11 +29,13 @@ contract SmartWallet {
         _;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
     receive() external payable {}
 
-    // =========================
-    // ERC-4337 UserOperation Struct (Minimal)
-    // =========================
     struct PackedUserOperation {
         address sender;
         uint256 nonce;
@@ -35,25 +48,41 @@ contract SmartWallet {
         bytes signature;
     }
 
-    // =========================
-    // Execute Function
-    // =========================
     function execute(
         address to,
         uint256 value,
         bytes calldata data
     ) external onlyEntryPoint {
         require(to != address(0), "Invalid target");
-
         (bool success, ) = to.call{value: value}(data);
         require(success, "Execution failed");
-
         emit Executed(to, value);
     }
 
-    // =========================
-    // ERC-4337 Validation Function
-    // =========================
+    // Add a session key — only owner can call this
+    function addSessionKey(
+        address key,
+        address allowedTarget,
+        uint256 maxAmount,
+        uint256 validUntil
+    ) external onlyOwner {
+        require(key != address(0), "Invalid key");
+        require(validUntil > block.timestamp, "Already expired");
+        sessionKeys[key] = SessionKey({
+            allowedTarget: allowedTarget,
+            maxAmount: maxAmount,
+            validUntil: validUntil,
+            active: true
+        });
+        emit SessionKeyAdded(key, allowedTarget, maxAmount, validUntil);
+    }
+
+    // Revoke a session key
+    function revokeSessionKey(address key) external onlyOwner {
+        sessionKeys[key].active = false;
+        emit SessionKeyRevoked(key);
+    }
+
     function validateUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
@@ -67,23 +96,34 @@ contract SmartWallet {
         );
 
         address recovered = recoverSigner(hash, userOp.signature);
-        require(recovered == owner, "Invalid signature");
+
+        if (recovered == owner) {
+            // Owner signature — always valid
+        } else {
+            // Check session key
+            SessionKey memory sk = sessionKeys[recovered];
+            require(sk.active, "Invalid signature");
+            require(block.timestamp <= sk.validUntil, "Session key expired");
+
+            // Decode calldata to check target and amount
+            (address target, uint256 value, ) = abi.decode(
+                userOp.callData[4:],
+                (address, uint256, bytes)
+            );
+            require(target == sk.allowedTarget, "Target not allowed");
+            require(value <= sk.maxAmount, "Amount exceeds limit");
+        }
 
         nonce++;
 
         if (missingAccountFunds > 0) {
-            (bool success, ) = payable(msg.sender).call{
-                value: missingAccountFunds
-            }("");
+            (bool success, ) = payable(msg.sender).call{value: missingAccountFunds}("");
             require(success, "Prefund failed");
         }
 
         return 0;
     }
 
-    // =========================
-    // Signature Verification
-    // =========================
     function recoverSigner(
         bytes32 hash,
         bytes memory signature
@@ -96,7 +136,6 @@ contract SmartWallet {
         bytes memory sig
     ) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
         require(sig.length == 65, "Invalid signature length");
-
         assembly {
             r := mload(add(sig, 32))
             s := mload(add(sig, 64))
