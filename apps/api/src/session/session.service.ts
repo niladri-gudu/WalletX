@@ -4,7 +4,7 @@ import { createWalletClient, http, publicActions } from 'viem';
 import { sepolia } from 'viem/chains';
 import { SessionKeyData } from './session.types.js';
 
-const SMART_WALLET = process.env.NEXT_PUBLIC_SMART_WALLET as `0x${string}`;
+const SMART_WALLET = process.env.SMART_WALLET as `0x${string}`;
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 
 const SMART_WALLET_ABI = [

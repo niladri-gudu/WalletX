@@ -11,4 +11,22 @@ export class UseropController {
   ) {
     return this.service.sendETH(body.wallet, body.to, BigInt(body.amount));
   }
+
+  @Post('send-session')
+  async sendWithSession(
+    @Body()
+    body: {
+      wallet: `0x${string}`;
+      to: `0x${string}`;
+      amount: string;
+      sessionKeyAddress: `0x${string}`;
+    },
+  ) {
+    return this.service.sendWithSessionKey(
+      body.wallet,
+      body.to,
+      BigInt(body.amount),
+      body.sessionKeyAddress,
+    );
+  }
 }
