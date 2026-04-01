@@ -7,16 +7,21 @@ contract SmartWallet {
     uint256 public nonce;
 
     struct SessionKey {
-        address allowedTarget;  // which address it can call
-        uint256 maxAmount;      // max ETH per tx
-        uint256 validUntil;     // expiry timestamp
+        address allowedTarget; // which address it can call
+        uint256 maxAmount; // max ETH per tx
+        uint256 validUntil; // expiry timestamp
         bool active;
     }
 
     mapping(address => SessionKey) public sessionKeys;
 
     event Executed(address to, uint256 value);
-    event SessionKeyAdded(address key, address target, uint256 maxAmount, uint256 validUntil);
+    event SessionKeyAdded(
+        address key,
+        address target,
+        uint256 maxAmount,
+        uint256 validUntil
+    );
     event SessionKeyRevoked(address key);
 
     constructor(address _owner, address _entryPoint) {
@@ -105,11 +110,18 @@ contract SmartWallet {
             require(sk.active, "Invalid signature");
             require(block.timestamp <= sk.validUntil, "Session key expired");
 
-            // Decode calldata to check target and amount
-            (address target, uint256 value, ) = abi.decode(
-                userOp.callData[4:],
-                (address, uint256, bytes)
-            );
+            bytes memory cd = userOp.callData;
+            require(cd.length >= 4 + 32 + 32, "Invalid callData");
+
+            address target;
+            uint256 value;
+
+            assembly {
+                target := mload(add(cd, 36))
+                value  := mload(add(cd, 68))
+            }
+
+            target = address(uint160(target));
             require(target == sk.allowedTarget, "Target not allowed");
             require(value <= sk.maxAmount, "Amount exceeds limit");
         }
@@ -117,7 +129,9 @@ contract SmartWallet {
         nonce++;
 
         if (missingAccountFunds > 0) {
-            (bool success, ) = payable(msg.sender).call{value: missingAccountFunds}("");
+            (bool success, ) = payable(msg.sender).call{
+                value: missingAccountFunds
+            }("");
             require(success, "Prefund failed");
         }
 
