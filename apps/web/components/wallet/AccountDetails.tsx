@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 
@@ -9,7 +10,7 @@ export function AccountDetails({
   balance: any;
 }) {
   return (
-    <Card className="bg-gradient-to-br from-card to-muted/50 overflow-hidden border-primary/10">
+    <Card className="bg-linear-to-br from-card to-muted/50 overflow-hidden border-primary/10">
       <CardContent className="pt-6">
         <div className="flex flex-col gap-4">
           <div>

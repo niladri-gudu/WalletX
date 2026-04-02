@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { KeyRound, Trash2 } from "lucide-react";
 export function SessionManager({ 
   sessions, 
   activeSession, 
-  onRefresh, 
   onCreate, 
   onRevoke,
   formState,
