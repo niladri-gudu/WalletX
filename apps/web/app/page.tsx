@@ -31,6 +31,7 @@ export default function Page() {
     amount: "",
     duration: "3600",
   });
+  const isProcessing = status === "loading" || status === "pending";
 
   useEffect(() => {
     fetchSessions();
@@ -71,6 +72,59 @@ export default function Page() {
     }
   };
 
+  const trackUserOp = async (userOpHash: string) => {
+    toast.loading("⏳ Sending UserOperation...", { id: userOpHash });
+
+    let done = false;
+
+    while (!done) {
+      try {
+        const res = await fetch(`${API_URL}/userop/status/${userOpHash}`);
+        const data = await res.json();
+
+        if (data.status === "pending") {
+          toast.loading("📡 Waiting for bundler...", {
+            id: userOpHash,
+          });
+        }
+
+        if (data.status === "confirmed") {
+          toast.success("✅ UserOperation Confirmed!", {
+            id: userOpHash,
+            action: {
+              label: "View on Etherscan",
+              onClick: () => {
+                window.open(
+                  `https://sepolia.etherscan.io/tx/${data.txHash}`,
+                  "_blank",
+                );
+              },
+            },
+          });
+
+          setTxHash(data.txHash);
+          setStatus("success");
+          done = true;
+        }
+
+        if (data.status === "failed") {
+          toast.error("❌ Transaction failed", {
+            id: userOpHash,
+          });
+
+          setStatus("error");
+          setIsError(true);
+          done = true;
+        }
+
+        await new Promise((r) => setTimeout(r, 2000));
+      } catch (error) {
+        toast.error("⚠️ Tracking error", { id: userOpHash });
+        done = true;
+      }
+    }
+  };
+
   const handleSend = async () => {
     setStatus("loading");
     setTxHash("");
@@ -93,18 +147,23 @@ export default function Page() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
-      setTxHash(data.result);
-      setStatus("success");
+
+      const userOpHash = data.result;
+
+      setTxHash(userOpHash);
+      setStatus("pending");
+
+      trackUserOp(userOpHash);
     } catch (err) {
       setStatus("error");
       setIsError(true);
+      toast.error("❌ Failed to send transaction");
     }
   };
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
       {/* <Navbar /> */}
-
       <main className="container max-w-6xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Side Panel: Identity & Access */}
@@ -117,6 +176,7 @@ export default function Page() {
               setFormState={setSessionForm}
               onCreate={createSession}
               status={status}
+              isProcessing={isProcessing}
               onRevoke={async (addr: string) => {
                 await fetch(`${API_URL}/session/revoke/${addr}`, {
                   method: "DELETE",
@@ -141,6 +201,7 @@ export default function Page() {
               onSend={handleSend}
               status={status}
               isConnected={isConnected}
+              isProcessing={isProcessing}
             />
 
             <TxLifecycle

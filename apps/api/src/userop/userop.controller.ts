@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UseropService } from './userop.service.js';
 
 @Controller('userop')
@@ -28,5 +28,10 @@ export class UseropController {
       BigInt(body.amount),
       body.sessionKeyAddress,
     );
+  }
+
+  @Get('status/:txHash')
+  async getStatus(@Param('txHash') txHash: `0x${string}`) {
+    return this.service.getUserOpStatus(txHash);
   }
 }

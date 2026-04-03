@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { publicClient } from '../blockchain/viem.client.js';
 import { buildCallData, buildUserOp } from './userop.builder.js';
@@ -7,10 +10,17 @@ import { getPaymasterData } from '../lib/paymaster.js';
 import { PAYMASTER_ADDRESS } from '../config/constants.js';
 import { SessionService } from '../session/session.service.js';
 import { privateKeyToAccount } from 'viem/accounts';
+import { createPublicClient, http } from 'viem';
+import { sepolia } from 'viem/chains';
 
 @Injectable()
 export class UseropService {
   constructor(private readonly sessionService: SessionService) {}
+
+  private bundlerClient = createPublicClient({
+    chain: sepolia,
+    transport: http(process.env.BUNDLER_URL),
+  });
 
   async sendETH(wallet: `0x${string}`, to: `0x${string}`, amount: bigint) {
     const nonce = await publicClient.readContract({
@@ -86,5 +96,26 @@ export class UseropService {
     });
 
     return await sendUserOp(userOp);
+  }
+
+  async getUserOpStatus(txHash: `0x${string}`) {
+    try {
+      const receipt = (await this.bundlerClient.request({
+        method: 'eth_getUserOperationReceipt' as any,
+        params: [txHash],
+      })) as any;
+
+      if (!receipt) {
+        return { status: 'pending' };
+      }
+
+      if (receipt && receipt.success === false) {
+        return { status: 'failed' };
+      }
+
+      return { status: 'confirmed', txHash: receipt.receipt.transactionHash };
+    } catch (error) {
+      return { status: 'pending' };
+    }
   }
 }
