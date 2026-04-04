@@ -13,7 +13,6 @@ export function SessionManager({
   onRevoke,
   formState,
   setFormState,
-  status,
   isProcessing,
 }: any) {
   return (
