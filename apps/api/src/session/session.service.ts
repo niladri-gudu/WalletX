@@ -5,7 +5,7 @@ import { sepolia } from 'viem/chains';
 import { SessionKeyData } from './session.types.js';
 
 const SMART_WALLET = process.env.SMART_WALLET as `0x${string}`;
-const PRIVATE_KEY = process.env._BACKEND_PRIVATE_KEY as `0x${string}`;
+const BACKEND_PRIVATE_KEY = process.env.BACKEND_PRIVATE_KEY as `0x${string}`;
 
 const SMART_WALLET_ABI = [
   {
@@ -311,7 +311,7 @@ const sessionStore = new Map<string, SessionKeyData>();
 @Injectable()
 export class SessionService {
   private walletClient = createWalletClient({
-    account: privateKeyToAccount(PRIVATE_KEY),
+    account: privateKeyToAccount(BACKEND_PRIVATE_KEY),
     chain: sepolia,
     transport: http(process.env.RPC_URL),
   }).extend(publicActions);

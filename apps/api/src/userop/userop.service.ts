@@ -46,6 +46,35 @@ export class UseropService {
     userOp.paymasterData = '0x';
 
     const hashForPaymaster = getUserOpHash(userOp);
+
+    console.log('🔵 hashForPaymaster:', hashForPaymaster);
+    console.log('🔵 paymasterData:', await getPaymasterData(hashForPaymaster));
+
+    // Simulate what contract does
+    const { recoverAddress, keccak256, encodePacked } = await import('viem');
+    const sig = await getPaymasterData(hashForPaymaster);
+
+    // Contract uses: ecrecover(userOpHash, v, r, s) — NO prefix
+    const recovered1 = await recoverAddress({
+      hash: hashForPaymaster,
+      signature: sig,
+    });
+    console.log('🔵 recovered (no prefix)  :', recovered1);
+
+    // Or with prefix
+    const ethHash = keccak256(
+      encodePacked(
+        ['string', 'bytes32'],
+        ['\x19Ethereum Signed Message:\n32', hashForPaymaster],
+      ),
+    );
+    const recovered2 = await recoverAddress({ hash: ethHash, signature: sig });
+    console.log('🔵 recovered (with prefix):', recovered2);
+    console.log(
+      '🔵 expected               :',
+      '0xCD3fe88a6675A05d5cC0EC6CF4357eC1Cec7152e',
+    );
+
     userOp.paymasterData = await getPaymasterData(hashForPaymaster);
 
     const hashForWallet = getUserOpHash(userOp);

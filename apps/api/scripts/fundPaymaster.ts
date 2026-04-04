@@ -3,7 +3,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import 'dotenv/config'
 
-const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const account = privateKeyToAccount(process.env.OWNER_PRIVATE_KEY as `0x${string}`);
 
 const client = createWalletClient({
   account,

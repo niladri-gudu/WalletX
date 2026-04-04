@@ -169,9 +169,11 @@ export default function Page() {
 
       trackUserOp(userOpHash);
     } catch (err) {
+      console.error("TX ERROR:", err);
+      toast.error(err?.message || "Failed to send transaction");
       setStatus("error");
       setIsError(true);
-      toast.error("❌ Failed to send transaction");
+      // toast.error("❌ Failed to send transaction");
     }
   };
 
