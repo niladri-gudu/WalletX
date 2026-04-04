@@ -75,6 +75,13 @@ export default function Page() {
       if (!res.ok) throw new Error("Failed");
 
       toast.success("Session Key Created");
+
+      setSessionForm({
+        target: "",
+        amount: "",
+        duration: "3600",
+      });
+
       fetchSessions();
     } catch (e) {
       toast.error("Creation failed");
@@ -164,16 +171,17 @@ export default function Page() {
 
       const userOpHash = data.result;
 
+      setTo("");
+      setAmount("");
+
       setUserOpHash(userOpHash);
       setStatus("pending");
 
       trackUserOp(userOpHash);
     } catch (err) {
-      console.error("TX ERROR:", err);
-      toast.error(err?.message || "Failed to send transaction");
       setStatus("error");
       setIsError(true);
-      // toast.error("❌ Failed to send transaction");
+      toast.error("❌ Failed to send transaction");
     }
   };
 

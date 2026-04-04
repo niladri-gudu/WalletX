@@ -49,6 +49,7 @@ export function SessionManager({
               <Input
                 type="number"
                 value={formState.amount}
+                disabled={isProcessing}
                 onChange={(e) =>
                   setFormState({ ...formState, amount: e.target.value })
                 }
@@ -59,6 +60,7 @@ export function SessionManager({
               <Input
                 type="number"
                 value={formState.duration}
+                disabled={isProcessing}
                 onChange={(e) =>
                   setFormState({ ...formState, duration: e.target.value })
                 }

@@ -1,4 +1,3 @@
-// components/wallet/TransactionForm.tsx
 import {
   Card,
   CardContent,
@@ -10,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { SendHorizontal, Zap, KeyRound, Loader2 } from "lucide-react";
+import { SendHorizontal, Zap, KeyRound } from "lucide-react";
 
 interface TxFormProps {
   to: string;
@@ -39,7 +38,6 @@ export function TransactionForm({
   setUseSessionKey,
   activeSession,
   onSend,
-  status,
   isConnected,
   isProcessing,
 }: TxFormProps) {
@@ -111,7 +109,11 @@ export function TransactionForm({
                 Gasless Execution
               </span>
             </div>
-            <Switch checked={sponsored} onCheckedChange={setSponsored} />
+            <Switch 
+              checked={sponsored} 
+              onCheckedChange={setSponsored} 
+              disabled={isProcessing}
+            />
           </div>
 
           <div
@@ -133,7 +135,7 @@ export function TransactionForm({
             <Switch
               checked={useSessionKey}
               onCheckedChange={setUseSessionKey}
-              disabled={!activeSession}
+              disabled={!activeSession || isProcessing}
             />
           </div>
         </div>
