@@ -1,6 +1,5 @@
 import Footer from "./Footer";
 import { Navbar } from "./Navbar";
-import { Toaster } from "@/components/ui/sonner";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -17,8 +16,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <Footer />
       </div>
-
-      <Toaster position="bottom-right" richColors />
     </div>
   );
 }

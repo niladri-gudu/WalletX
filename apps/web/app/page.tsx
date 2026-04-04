@@ -17,6 +17,7 @@ export default function Page() {
 
   const [status, setStatus] = useState("idle");
   const [txHash, setTxHash] = useState("");
+  const [userOpHash, setUserOpHash] = useState("");
   const [isError, setIsError] = useState(false);
 
   const [to, setTo] = useState("");
@@ -26,6 +27,7 @@ export default function Page() {
 
   const [sessions, setSessions] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
+
   const [sessionForm, setSessionForm] = useState({
     target: "",
     amount: "",
@@ -49,6 +51,8 @@ export default function Page() {
   };
 
   const createSession = async () => {
+    if (isProcessing) return;
+
     setStatus("loading");
     try {
       const res = await fetch(`${API_URL}/session/create`, {
@@ -62,7 +66,9 @@ export default function Page() {
           durationSeconds: parseInt(sessionForm.duration),
         }),
       });
+
       if (!res.ok) throw new Error("Failed");
+
       toast.success("Session Key Created");
       fetchSessions();
     } catch (e) {
@@ -89,17 +95,8 @@ export default function Page() {
         }
 
         if (data.status === "confirmed") {
-          toast.success("✅ UserOperation Confirmed!", {
+          toast.success("✅ Transaction confirmed!", {
             id: userOpHash,
-            action: {
-              label: "View on Etherscan",
-              onClick: () => {
-                window.open(
-                  `https://sepolia.etherscan.io/tx/${data.txHash}`,
-                  "_blank",
-                );
-              },
-            },
           });
 
           setTxHash(data.txHash);
@@ -126,9 +123,13 @@ export default function Page() {
   };
 
   const handleSend = async () => {
+    if (isProcessing) return;
+
     setStatus("loading");
     setTxHash("");
+    setUserOpHash("");
     setIsError(false);
+
     try {
       const endpoint =
         useSessionKey && activeSession
@@ -145,12 +146,13 @@ export default function Page() {
           sessionKeyAddress: useSessionKey ? activeSession?.address : undefined,
         }),
       });
+
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
       const userOpHash = data.result;
 
-      setTxHash(userOpHash);
+      setUserOpHash(userOpHash);
       setStatus("pending");
 
       trackUserOp(userOpHash);
@@ -205,9 +207,9 @@ export default function Page() {
             />
 
             <TxLifecycle
+              userOpHash={userOpHash}
               txHash={txHash}
-              isLoading={status === "loading"}
-              isError={isError}
+              status={status}
             />
           </div>
         </div>

@@ -47,168 +47,57 @@ const STAGES: Stage[] = [
 ];
 
 type Props = {
-  txHash: string | null;
-  isLoading: boolean;
-  isError: boolean;
+  userOpHash: string;
+  txHash: string;
+  status: string;
 };
 
-export function TxLifecycle({ txHash, isLoading, isError }: Props) {
-  // Fixed the syntax for the Record type here
-  const [stageStatuses, setStageStatuses] = useState<
-    Record<string, StageStatus>
-  >({
-    sign: "idle",
-    bundler: "idle",
-    mempool: "idle",
-    entrypoint: "idle",
-    executed: "idle",
-  });
+export function TxLifecycle({ userOpHash, txHash, status }: Props) {
+  const getStatus = (step: number) => {
+    if (status === "error") return "error";
 
-  useEffect(() => {
-    if (!isLoading && !txHash && !isError) {
-      setStageStatuses({
-        sign: "idle",
-        bundler: "idle",
-        mempool: "idle",
-        entrypoint: "idle",
-        executed: "idle",
-      });
-      return;
-    }
+    if (step === 0 && userOpHash) return "done";
+    if (step === 1 && status === "pending") return "active";
+    if (step === 1 && status === "success") return "done";
+    if (step === 2 && txHash) return "done";
 
-    if (isError) {
-      setStageStatuses((prev) => {
-        const updated = { ...prev };
-        for (const stage of STAGES) {
-          if (updated[stage.id] === "active") {
-            updated[stage.id] = "error";
-            break;
-          }
-        }
-        return updated;
-      });
-      return;
-    }
+    return "idle";
+  };
 
-    if (isLoading) {
-      let current = 0;
-      setStageStatuses({
-        sign: "idle",
-        bundler: "idle",
-        mempool: "idle",
-        entrypoint: "idle",
-        executed: "idle",
-      });
-
-      const interval = setInterval(() => {
-        if (current >= STAGES.length - 1) {
-          clearInterval(interval);
-          return;
-        }
-        const stageId = STAGES[current].id;
-        setStageStatuses((prev) => ({
-          ...prev,
-          [stageId]: "done",
-          [STAGES[current + 1]?.id]: "active",
-        }));
-        current++;
-      }, 800);
-
-      setStageStatuses((prev) => ({ ...prev, sign: "active" }));
-      return () => clearInterval(interval);
-    }
-
-    if (txHash) {
-      setStageStatuses({
-        sign: "done",
-        bundler: "done",
-        mempool: "done",
-        entrypoint: "done",
-        executed: "done",
-      });
-    }
-  }, [isLoading, txHash, isError]);
-
-  const isVisible = isLoading || txHash !== null || isError;
-  if (!isVisible) return null;
+  const steps = ["UserOp Sent", "Waiting for Bundler", "Executed On-chain"];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          Transaction Lifecycle
-          {isLoading && (
-            <Badge variant="secondary" className="text-yellow-500">
-              Processing...
-            </Badge>
-          )}
-          {txHash && !isLoading && (
-            <Badge variant="secondary" className="text-green-500">
-              Confirmed
-            </Badge>
-          )}
-          {isError && <Badge variant="destructive">Failed</Badge>}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+    <div className="p-4 border rounded-xl space-y-3">
+      <h3 className="font-semibold">Transaction Lifecycle</h3>
 
-          <div className="space-y-4">
-            {STAGES.map((stage) => {
-              const status = stageStatuses[stage.id];
-              return (
-                <div key={stage.id} className="flex items-start gap-4 pl-2">
-                  <div
-                    className={`
-                      relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs
-                      ${status === "done" ? "bg-green-500 border-green-500 text-white" : ""}
-                      ${status === "active" ? "bg-yellow-500 border-yellow-500 text-white animate-pulse" : ""}
-                      ${status === "error" ? "bg-red-500 border-red-500 text-white" : ""}
-                      ${status === "idle" ? "bg-background border-border text-muted-foreground" : ""}
-                    `}
-                  >
-                    {status === "done"
-                      ? "✓"
-                      : status === "error"
-                        ? "✗"
-                        : stage.icon[0]}
-                  </div>
+      {steps.map((label, i) => {
+        const s = getStatus(i);
 
-                  <div className="pb-4">
-                    <div className="flex items-center gap-2">
-                      <p
-                        className={`text-sm font-medium ${
-                          status === "idle" ? "text-muted-foreground" : ""
-                        } ${status === "done" ? "text-green-500" : ""} ${
-                          status === "active" ? "text-yellow-500" : ""
-                        } ${status === "error" ? "text-red-500" : ""}`}
-                      >
-                        {stage.icon} {stage.label}
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {stage.description}
-                    </p>
-
-                    {/* FIXED: Added missing <a> tag */}
-                    {status === "done" && stage.id === "executed" && txHash && (
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-400 hover:underline font-mono mt-1 block"
-                      >
-                        {txHash.slice(0, 20)}...{txHash.slice(-8)} ↗
-                      </a>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <div
+              className={`w-3 h-3 rounded-full ${
+                s === "done"
+                  ? "bg-green-500"
+                  : s === "active"
+                    ? "bg-yellow-500 animate-pulse"
+                    : s === "error"
+                      ? "bg-red-500"
+                      : "bg-gray-300"
+              }`}
+            />
+            <span>{label}</span>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        );
+      })}
+
+      {userOpHash && (
+        <p className="text-xs text-gray-500 break-all">UserOp: {userOpHash}</p>
+      )}
+
+      {txHash && (
+        <p className="text-xs text-green-600 break-all">Tx: {txHash}</p>
+      )}
+    </div>
   );
 }
