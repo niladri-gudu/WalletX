@@ -2,7 +2,9 @@
 import { getUserOperationHash } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 
-const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const account = privateKeyToAccount(
+  process.env.OWNER_PRIVATE_KEY as `0x${string}`,
+);
 const ENTRY_POINT = process.env.ENTRY_POINT as `0x${string}`;
 const CHAIN_ID = 11155111;
 

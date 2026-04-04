@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AccountDetails } from "@/components/wallet/AccountDetails";
 import { SessionManager } from "@/components/wallet/SessionManager";
 import { TransactionForm } from "@/components/wallet/TransactionForm";
-import { TxLifecycle } from "@/components/TxLifecycle";
+import { TxResult } from "@/components/TxResult";
 
 const SMART_WALLET = process.env.NEXT_PUBLIC_SMART_WALLET as `0x${string}`;
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -52,6 +52,11 @@ export default function Page() {
 
   const createSession = async () => {
     if (isProcessing) return;
+
+    if (!sessionForm.target || !sessionForm.target.startsWith("0x")) {
+      toast.error("Enter valid target address");
+      return;
+    }
 
     setStatus("loading");
     try {
@@ -102,6 +107,13 @@ export default function Page() {
           setTxHash(data.txHash);
           setStatus("success");
           done = true;
+
+          setTimeout(() => {
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            });
+          }, 300);
         }
 
         if (data.status === "failed") {
@@ -180,9 +192,12 @@ export default function Page() {
               status={status}
               isProcessing={isProcessing}
               onRevoke={async (addr: string) => {
+                if (isProcessing) return;
+
                 await fetch(`${API_URL}/session/revoke/${addr}`, {
                   method: "DELETE",
                 });
+
                 fetchSessions();
               }}
             />
@@ -206,11 +221,7 @@ export default function Page() {
               isProcessing={isProcessing}
             />
 
-            <TxLifecycle
-              userOpHash={userOpHash}
-              txHash={txHash}
-              status={status}
-            />
+            <TxResult txHash={txHash} />
           </div>
         </div>
       </main>

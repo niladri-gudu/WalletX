@@ -25,6 +25,7 @@ interface TxFormProps {
   onSend: () => void;
   status: string;
   isConnected: boolean;
+  isProcessing: boolean;
 }
 
 export function TransactionForm({
@@ -40,9 +41,8 @@ export function TransactionForm({
   onSend,
   status,
   isConnected,
+  isProcessing,
 }: TxFormProps) {
-  const isLoading = status === "loading";
-
   return (
     <Card className="border-primary/10 shadow-2xl shadow-primary/5 bg-card/50 backdrop-blur-sm">
       <CardHeader>
@@ -71,6 +71,7 @@ export function TransactionForm({
               placeholder="0x..."
               className="font-mono bg-background/50 border-muted focus-visible:ring-primary h-11"
               value={to}
+              disabled={isProcessing}
               onChange={(e) => setTo(e.target.value)}
             />
           </div>
@@ -89,6 +90,7 @@ export function TransactionForm({
                 placeholder="0.00"
                 className="pl-4 pr-16 font-semibold bg-background/50 border-muted h-11 text-lg"
                 value={amount}
+                disabled={isProcessing}
                 onChange={(e) => setAmount(e.target.value)}
               />
               <div className="absolute right-3 top-2.5 px-2 py-0.5 rounded bg-muted text-[10px] font-bold">
@@ -137,19 +139,14 @@ export function TransactionForm({
         </div>
 
         <Button
-          className="w-full h-12 text-md font-bold transition-all active:scale-[0.98]"
+          className={`w-full h-12 text-md font-bold transition-all active:scale-[0.98] ${
+            isProcessing ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           size="lg"
           onClick={onSend}
-          disabled={isLoading || !isConnected || !to || !amount}
+          disabled={isProcessing || !isConnected || !to || !amount}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Broadcasting UserOp...
-            </>
-          ) : (
-            "Send Transaction"
-          )}
+          {isProcessing ? "Processing..." : "Send Transaction"}
         </Button>
       </CardContent>
     </Card>

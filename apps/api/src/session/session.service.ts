@@ -5,7 +5,7 @@ import { sepolia } from 'viem/chains';
 import { SessionKeyData } from './session.types.js';
 
 const SMART_WALLET = process.env.SMART_WALLET as `0x${string}`;
-const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
+const PRIVATE_KEY = process.env._BACKEND_PRIVATE_KEY as `0x${string}`;
 
 const SMART_WALLET_ABI = [
   {
@@ -324,6 +324,10 @@ export class SessionService {
     const privateKey = generatePrivateKey();
     const account = privateKeyToAccount(privateKey);
     const validUntil = Math.floor(Date.now() / 1000) + durationSeconds;
+
+    if (!allowedTarget || !allowedTarget.startsWith('0x')) {
+      throw new Error('Invalid target address');
+    }
 
     console.log('🔑 New session key:', account.address);
     console.log('🎯 Allowed target:', allowedTarget);
