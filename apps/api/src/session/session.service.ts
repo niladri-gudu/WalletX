@@ -329,11 +329,6 @@ export class SessionService {
       throw new Error('Invalid target address');
     }
 
-    console.log('🔑 New session key:', account.address);
-    console.log('🎯 Allowed target:', allowedTarget);
-    console.log('💰 Max amount:', maxAmount.toString());
-    console.log('⏰ Valid until:', new Date(validUntil * 1000).toISOString());
-
     const hash = await this.walletClient.writeContract({
       address: SMART_WALLET,
       abi: SMART_WALLET_ABI,
@@ -341,10 +336,7 @@ export class SessionService {
       args: [account.address, allowedTarget, maxAmount, BigInt(validUntil)],
     });
 
-    console.log('📝 addSessionKey tx:', hash);
-
     await this.walletClient.waitForTransactionReceipt({ hash });
-    console.log('✅ Session key registered on-chain');
 
     const sessionData: SessionKeyData = {
       privateKey,
@@ -375,7 +367,6 @@ export class SessionService {
     await this.walletClient.waitForTransactionReceipt({ hash });
     sessionStore.delete(sessionKeyAddress);
 
-    console.log('🗑️ Session key revoked:', sessionKeyAddress);
     return { revoked: true, sessionKeyAddress };
   }
 
