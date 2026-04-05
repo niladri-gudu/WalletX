@@ -188,7 +188,8 @@ pnpm install
 
 **`apps/api/.env`**
 ```bash
-PRIVATE_KEY=<smart wallet owner private key>
+OWNER_PRIVATE_KEY=<smart wallet owner private key>
+BACKEND_PRIVATE_KEY=<backend signer private key>
 PAYMASTER_PRIVATE_KEY=<paymaster signer private key>
 PAYMASTER_ADDRESS=<deployed paymaster contract address>
 SMART_WALLET=<deployed smart wallet address>
