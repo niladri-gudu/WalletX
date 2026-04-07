@@ -2,6 +2,9 @@
 
 A full-stack implementation of an ERC-4337 Account Abstraction smart wallet with gasless transactions, session keys, and transaction lifecycle visualization.
 
+💻 **Project 4/6 of my [6 Projects in 60 Days](https://twitter.com/dev_niladri) challenge**  
+← [Project 3: ZKPass](https://github.com/niladri-gudu/ZKPass)
+
 ---
 
 ## What is this?
